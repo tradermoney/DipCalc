@@ -57,46 +57,73 @@ export class GridDipCalculator {
       // 百分比模式：每次下跌stepValue%
       priceStep = (basePrice! * stepValue!) / 100;
     }
-    
+
     const amountPerGrid = totalCapital / gridCount;
-    
-    const levels: CalculationLevel[] = [];
-    let newInvested = 0;
-    let newHoldings = 0;
-    
-    // 计算每个档位
+
+    // 先计算所有档位的理论值（不依赖currentPrice触发）
+    let theoreticalInvested = 0;
+    let theoreticalHoldings = 0;
+
     for (let i = 1; i <= gridCount; i++) {
       let triggerPrice: number;
-      
+
       if (stepMode === 'absolute') {
         triggerPrice = upperBound - (i * priceStep);
       } else {
         // 百分比模式：从基准价格开始，每次下跌stepValue%
         triggerPrice = basePrice! * Math.pow(1 - stepValue! / 100, i);
       }
-      
+
       const investAmount = amountPerGrid;
       const holdings = investAmount / triggerPrice;
-      
+
+      theoreticalInvested += investAmount;
+      theoreticalHoldings += holdings;
+    }
+
+    // 重新计算每个档位，记录实际触发状态和理论平均成本
+    const levels: CalculationLevel[] = [];
+    let newInvested = 0;
+    let newHoldings = 0;
+
+    for (let i = 1; i <= gridCount; i++) {
+      let triggerPrice: number;
+
+      if (stepMode === 'absolute') {
+        triggerPrice = upperBound - (i * priceStep);
+      } else {
+        // 百分比模式：从基准价格开始，每次下跌stepValue%
+        triggerPrice = basePrice! * Math.pow(1 - stepValue! / 100, i);
+      }
+
+      const investAmount = amountPerGrid;
+      const holdings = investAmount / triggerPrice;
+
       // 判断是否已触发（如果提供了当前价格）
       const triggered = currentPrice ? currentPrice <= triggerPrice : false;
-      
+
       if (triggered) {
         newInvested += investAmount;
         newHoldings += holdings;
       }
-      
+
       // 计算累计数据（包含现有持仓）
-      const cumulativeInvested = triggered ? 
-        (isAddPosition && existingPosition ? existingPosition.totalInvested + newInvested : newInvested) : 
+      const cumulativeInvested = triggered ?
+        (isAddPosition && existingPosition ? existingPosition.totalInvested + newInvested : newInvested) :
         (isAddPosition && existingPosition ? existingPosition.totalInvested : 0);
-      
-      const cumulativeHoldings = triggered ? 
-        (isAddPosition && existingPosition ? existingPosition.holdings + newHoldings : newHoldings) : 
+
+      const cumulativeHoldings = triggered ?
+        (isAddPosition && existingPosition ? existingPosition.holdings + newHoldings : newHoldings) :
         (isAddPosition && existingPosition ? existingPosition.holdings : 0);
-      
-      const averageCost = triggered && cumulativeHoldings > 0 ? cumulativeInvested / cumulativeHoldings : 0;
-      
+
+      // 计算理论平均成本（基于全部投入和持仓，即使未触发）
+      const theoreticalAverageCost = theoreticalHoldings > 0 ?
+        (isAddPosition && existingPosition ?
+          (existingPosition.totalInvested + theoreticalInvested) / (existingPosition.holdings + theoreticalHoldings) :
+          theoreticalInvested / theoreticalHoldings) : 0;
+
+      const averageCost = triggered && cumulativeHoldings > 0 ? cumulativeInvested / cumulativeHoldings : theoreticalAverageCost;
+
       const level: CalculationLevel = {
         level: i,
         triggerPrice,
@@ -107,20 +134,20 @@ export class GridDipCalculator {
         averageCost,
         triggered
       };
-      
+
       levels.push(level);
     }
-    
-    // 计算总持仓和投入（包含现有持仓）
-    const totalHoldings = isAddPosition && existingPosition ? 
-      existingPosition.holdings + newHoldings : newHoldings;
-    
-    const totalInvested = isAddPosition && existingPosition ? 
-      existingPosition.totalInvested + newInvested : newInvested;
-    
-    // 计算平均成本
+
+    // 计算总持仓和投入（包含现有持仓） - 基于理论值（全部档位）
+    const totalHoldings = isAddPosition && existingPosition ?
+      existingPosition.holdings + theoreticalHoldings : theoreticalHoldings;
+
+    const totalInvested = isAddPosition && existingPosition ?
+      existingPosition.totalInvested + theoreticalInvested : theoreticalInvested;
+
+    // 计算平均成本 - 基于全部投入和全部持仓
     const averagePrice = totalHoldings > 0 ? totalInvested / totalHoldings : 0;
-    const remainingCash = totalCapital - newInvested;
+    const remainingCash = totalCapital - (currentPrice ? newInvested : 0);
     
     // 计算未实现盈亏
     let unrealizedPnL = 0;
