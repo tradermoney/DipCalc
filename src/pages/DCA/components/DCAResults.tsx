@@ -1,0 +1,294 @@
+import React from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Alert,
+  Chip,
+  LinearProgress
+} from '@mui/material';
+import { CalculationResult } from '../../../types';
+
+interface DCAResultsProps {
+  result: CalculationResult | null;
+  statistics: any;
+  progress: any;
+  errors: string[];
+  formatCurrency: (value: number) => string;
+  formatPercentage: (value: number) => string;
+}
+
+export const DCAResults: React.FC<DCAResultsProps> = ({
+  result,
+  statistics,
+  progress,
+  errors,
+  formatCurrency,
+  formatPercentage
+}) => {
+  if (errors.length > 0) {
+    return (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        <ul style={{ margin: 0, paddingLeft: 20 }}>
+          {errors.map((error, index) => (
+            <li key={index}>{error}</li>
+          ))}
+        </ul>
+      </Alert>
+    );
+  }
+
+  if (!result) {
+    return null;
+  }
+
+  return (
+    <>
+      {/* 进度显示 */}
+      {progress && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              定投进度
+            </Typography>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={8}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    投资进度: {progress.currentPeriod} / {progress.totalPeriods}
+                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={progress.progressPercentage}
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: 'grey.200',
+                      '& .MuiLinearProgress-bar': {
+                        backgroundColor: '#4caf50'
+                      }
+                    }}
+                  />
+                </Box>
+              </Grid>
+              <Grid item xs={4}>
+                <Typography variant="h6" color="primary">
+                  {formatPercentage(progress.progressPercentage / 100)}
+                </Typography>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 统计信息 */}
+      {statistics && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              策略统计
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Box>
+                  <Typography color="text.secondary" variant="body2">
+                    平均投入金额
+                  </Typography>
+                  <Typography variant="h6">
+                    {formatCurrency(statistics.averageInvestment)}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6}>
+                <Box>
+                  <Typography color="text.secondary" variant="body2">
+                    预期总投入
+                  </Typography>
+                  <Typography variant="h6">
+                    {formatCurrency(statistics.expectedTotalInvestment)}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6}>
+                <Box>
+                  <Typography color="text.secondary" variant="body2">
+                    资金利用率
+                  </Typography>
+                  <Typography variant="h6">
+                    {formatPercentage(statistics.capitalUtilization)}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6}>
+                <Box>
+                  <Typography color="text.secondary" variant="body2">
+                    风险等级
+                  </Typography>
+                  <Chip
+                    label={statistics.riskLevel}
+                    color={
+                      statistics.riskLevel === '低' ? 'success' :
+                      statistics.riskLevel === '中' ? 'warning' : 'error'
+                    }
+                    size="small"
+                  />
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 概览卡片 */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography color="text.secondary" gutterBottom>
+                总投入资金
+              </Typography>
+              <Typography variant="h6">
+                {formatCurrency(result.totalInvested)}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={6} sm={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography color="text.secondary" gutterBottom>
+                平均成本
+              </Typography>
+              <Typography variant="h6">
+                {result.averagePrice > 0 ? formatCurrency(result.averagePrice) : '-'}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={6} sm={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography color="text.secondary" gutterBottom>
+                持仓数量
+              </Typography>
+              <Typography variant="h6">
+                {result.totalHoldings.toFixed(4)}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={6} sm={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography color="text.secondary" gutterBottom>
+                剩余资金
+              </Typography>
+              <Typography variant="h6">
+                {formatCurrency(result.remainingCapital)}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* 当前盈亏 */}
+      {result.currentPriceAnalysis && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              当前盈亏分析
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Typography color="text.secondary" variant="body2">
+                  未实现盈亏
+                </Typography>
+                <Typography
+                  variant="h6"
+                  color={result.currentPriceAnalysis.unrealizedPnL >= 0 ? 'success.main' : 'error.main'}
+                >
+                  {formatCurrency(result.currentPriceAnalysis.unrealizedPnL)}
+                  ({formatPercentage(result.currentPriceAnalysis.unrealizedPnLPercentage)})
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography color="text.secondary" variant="body2">
+                  当前价格
+                </Typography>
+                <Typography variant="h6">
+                  {formatCurrency(result.currentPriceAnalysis.currentPrice)}
+                </Typography>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 补仓模式信息 */}
+      {result.isAddPosition && result.existingPosition && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              补仓模式分析
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <Typography color="text.secondary" variant="body2">
+                  现有持仓
+                </Typography>
+                <Typography variant="h6">
+                  {result.existingPosition.holdings.toFixed(4)}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography color="text.secondary" variant="body2">
+                  现有平均成本
+                </Typography>
+                <Typography variant="h6">
+                  {formatCurrency(result.existingPosition.averageCost)}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography color="text.secondary" variant="body2">
+                  新增投入
+                </Typography>
+                <Typography variant="h6">
+                  {formatCurrency(result.newInvested || 0)}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography color="text.secondary" variant="body2">
+                  新增持仓
+                </Typography>
+                <Typography variant="h6">
+                  {(result.newHoldings || 0).toFixed(4)}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography color="text.secondary" variant="body2">
+                  合并后总投入
+                </Typography>
+                <Typography variant="h6">
+                  {formatCurrency((result.existingPosition.totalInvested || 0) + (result.newInvested || 0))}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography color="text.secondary" variant="body2">
+                  合并后总持仓
+                </Typography>
+                <Typography variant="h6">
+                  {(result.existingPosition.holdings + (result.newHoldings || 0)).toFixed(4)}
+                </Typography>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+};

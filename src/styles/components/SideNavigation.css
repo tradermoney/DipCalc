@@ -1,0 +1,87 @@
+/* SideNavigation.css - 侧边导航样式 */
+.sideNavigation {
+  flex-shrink: 0;
+}
+
+.sideNavigationContent {
+  overflow: auto;
+  height: 100%;
+}
+
+.sideNavigationHeader {
+  padding: 16px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.sideNavigationTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary-color, #1976d2);
+  margin-bottom: 4px;
+}
+
+.sideNavigationSubtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+}
+
+.sideNavigationList {
+  padding-top: 8px;
+}
+
+.sideNavigationItem {
+  margin: 0 8px;
+  border-radius: 8px;
+}
+
+.sideNavigationItemButton {
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.sideNavigationItemButton:hover {
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+.sideNavigationItemButton.selected {
+  background-color: rgba(25, 118, 210, 0.16);
+}
+
+.sideNavigationItemButton.selected:hover {
+  background-color: rgba(25, 118, 210, 0.24);
+}
+
+.sideNavigationIcon {
+  color: inherit;
+  min-width: 40px;
+}
+
+.sideNavigationIcon.selected {
+  color: var(--primary-color, #1976d2);
+}
+
+.sideNavigationText {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.sideNavigationText.selected {
+  font-weight: 600;
+}
+
+/* 移动端抽屉样式 */
+@media (max-width: 960px) {
+  .sideNavigationMobile {
+    width: 280px;
+    box-sizing: border-box;
+  }
+}
+
+/* 桌面端持久化侧边栏 */
+@media (min-width: 960px) {
+  .sideNavigationDesktop {
+    display: block;
+  }
+}

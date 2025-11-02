@@ -1,0 +1,38 @@
+/* TopNavigation.css - 顶部导航样式 */
+.topNavigation {
+  z-index: 1200;
+}
+
+.topNavigationToolbar {
+  min-height: 64px;
+}
+
+.topNavigationTitle {
+  flex-grow: 1;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.topNavigationActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topNavigationIconButton {
+  transition: background-color 0.2s ease;
+}
+
+.topNavigationIconButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.topNavigationMobileMenuButton {
+  margin-right: 16px;
+}
+
+@media (min-width: 960px) {
+  .topNavigationMobileMenuButton {
+    display: none;
+  }
+}
